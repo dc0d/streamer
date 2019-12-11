@@ -10,85 +10,25 @@ import (
 	assert "github.com/stretchr/testify/require"
 )
 
-func Test_slice_iterator(t *testing.T) {
-	type (
-		expectation struct {
-			input          []interface{}
-			expectedOutput []interface{}
-		}
-	)
-
-	var (
-		expectations = []expectation{
-			{nil, nil},
-			{[]interface{}{1}, []interface{}{1}},
-			{[]interface{}{1, 2, "3"}, []interface{}{1, 2, "3"}},
-		}
-	)
-
-	for i, exp := range expectations {
-		var (
-			input          = exp.input
-			expectedOutput = exp.expectedOutput
-		)
-
-		t.Run(fmt.Sprintf("slice iterator test case %v", i+1), func(t *testing.T) {
-			var (
-				assert = assert.New(t)
-
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
-			)
-
-			index := 0
-			for iterator.Next() {
-				assert.Equal(expectedOutput[index], iterator.Value())
-				index++
-			}
-
-			assert.Equal(len(expectedOutput), index)
-		})
-	}
-
-	{
-		var (
-			input          = []interface{}{1, 2, "3"}
-			expectedOutput = []interface{}{1, 2, "3"}
-		)
-
-		t.Run("slice iterator does not proceed on Next() until the last value is read by Value()", func(t *testing.T) {
-			var (
-				assert = assert.New(t)
-
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
-			)
-
-			index := 0
-			for iterator.Next() {
-				iterator.Next()
-				assert.Equal(expectedOutput[index], iterator.Value())
-				index++
-			}
-
-			assert.Equal(len(expectedOutput), index)
-		})
-	}
-}
+type (
+	T = interface{}
+)
 
 func Test_stream_map(t *testing.T) {
 	type (
 		expectation struct {
-			input          []interface{}
-			expectedOutput []interface{}
-			mapFn          func(interface{}) interface{}
+			input          []T
+			expectedOutput []T
+			mapFn          func(T) T
 		}
 	)
 
 	var (
 		expectations = []expectation{
-			{nil, nil, func(x interface{}) interface{} { return x }},
-			{[]interface{}{}, []interface{}{}, func(x interface{}) interface{} { return x }},
-			{[]interface{}{1, 2, 3}, []interface{}{1, 2, 3}, func(x interface{}) interface{} { return x }},
-			{[]interface{}{1, 2, 3}, []interface{}{2, 4, 6}, func(x interface{}) interface{} { return x.(int) * 2 }},
+			{nil, nil, func(x T) T { return x }},
+			{[]T{}, []T{}, func(x T) T { return x }},
+			{[]T{1, 2, 3}, []T{1, 2, 3}, func(x T) T { return x }},
+			{[]T{1, 2, 3}, []T{2, 4, 6}, func(x T) T { return x.(int) * 2 }},
 		}
 	)
 
@@ -103,7 +43,7 @@ func Test_stream_map(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -121,16 +61,16 @@ func Test_stream_map(t *testing.T) {
 
 	{
 		var (
-			input          = []interface{}{1, 2, 3}
-			expectedOutput = []interface{}{2, 4, 6}
-			mapFn          = func(x interface{}) interface{} { return x.(int) * 2 }
+			input          = []T{1, 2, 3}
+			expectedOutput = []T{2, 4, 6}
+			mapFn          = func(x T) T { return x.(int) * 2 }
 		)
 
 		t.Run("stream map does not proceed until last value is read", func(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -151,9 +91,9 @@ func Test_stream_map(t *testing.T) {
 func Test_stream_chunk_by(t *testing.T) {
 	type (
 		expectation struct {
-			input          []interface{}
-			expectedOutput []interface{}
-			chunkFn        func(interface{}) interface{}
+			input          []T
+			expectedOutput []T
+			chunkFn        func(T) T
 		}
 	)
 
@@ -162,48 +102,48 @@ func Test_stream_chunk_by(t *testing.T) {
 			{
 				nil,
 				nil,
-				func(x interface{}) interface{} { return x },
+				func(x T) T { return x },
 			},
 			{
-				[]interface{}{1, 2, 3},
-				[]interface{}{
-					[]interface{}{1},
-					[]interface{}{2},
-					[]interface{}{3},
+				[]T{1, 2, 3},
+				[]T{
+					[]T{1},
+					[]T{2},
+					[]T{3},
 				},
-				func(x interface{}) interface{} { return x },
+				func(x T) T { return x },
 			},
 			{
-				[]interface{}{1, 3, 4, 6, 12, 7, 13, 18},
-				[]interface{}{
-					[]interface{}{1, 3},
-					[]interface{}{4, 6, 12},
-					[]interface{}{7, 13},
-					[]interface{}{18},
+				[]T{1, 3, 4, 6, 12, 7, 13, 18},
+				[]T{
+					[]T{1, 3},
+					[]T{4, 6, 12},
+					[]T{7, 13},
+					[]T{18},
 				},
-				func(x interface{}) interface{} { return x.(int) % 2 },
+				func(x T) T { return x.(int) % 2 },
 			},
 			{
-				[]interface{}{1, 2, 2, 3, 4, 4, 6, 7, 7},
-				[]interface{}{
-					[]interface{}{1},
-					[]interface{}{2, 2},
-					[]interface{}{3},
-					[]interface{}{4, 4},
-					[]interface{}{6},
-					[]interface{}{7, 7},
+				[]T{1, 2, 2, 3, 4, 4, 6, 7, 7},
+				[]T{
+					[]T{1},
+					[]T{2, 2},
+					[]T{3},
+					[]T{4, 4},
+					[]T{6},
+					[]T{7, 7},
 				},
-				func(x interface{}) interface{} { return x.(int) % 3 },
+				func(x T) T { return x.(int) % 3 },
 			},
 			{
-				[]interface{}{"str1", "123", "str2", "str3", "10", "20"},
-				[]interface{}{
-					[]interface{}{"str1"},
-					[]interface{}{"123"},
-					[]interface{}{"str2", "str3"},
-					[]interface{}{"10", "20"},
+				[]T{"str1", "123", "str2", "str3", "10", "20"},
+				[]T{
+					[]T{"str1"},
+					[]T{"123"},
+					[]T{"str2", "str3"},
+					[]T{"10", "20"},
 				},
-				func(x interface{}) interface{} {
+				func(x T) T {
 					_, err := strconv.Atoi(x.(string))
 					return err == nil
 				},
@@ -222,7 +162,7 @@ func Test_stream_chunk_by(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -240,23 +180,23 @@ func Test_stream_chunk_by(t *testing.T) {
 
 	{
 		var (
-			input          = []interface{}{1, 2, 2, 3, 4, 4, 6, 7, 7}
-			expectedOutput = []interface{}{
-				[]interface{}{1},
-				[]interface{}{2, 2},
-				[]interface{}{3},
-				[]interface{}{4, 4},
-				[]interface{}{6},
-				[]interface{}{7, 7},
+			input          = []T{1, 2, 2, 3, 4, 4, 6, 7, 7}
+			expectedOutput = []T{
+				[]T{1},
+				[]T{2, 2},
+				[]T{3},
+				[]T{4, 4},
+				[]T{6},
+				[]T{7, 7},
 			}
-			chunkFn = func(x interface{}) interface{} { return x.(int) % 3 }
+			chunkFn = func(x T) T { return x.(int) % 3 }
 		)
 
 		t.Run("stream chunk by does not proceed until last value is read", func(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -277,8 +217,8 @@ func Test_stream_chunk_by(t *testing.T) {
 func Test_stream_chunk_every(t *testing.T) {
 	type (
 		expectation struct {
-			input          []interface{}
-			expectedOutput []interface{}
+			input          []T
+			expectedOutput []T
 			chunkSize      int
 		}
 	)
@@ -291,29 +231,29 @@ func Test_stream_chunk_every(t *testing.T) {
 				100,
 			},
 			{
-				[]interface{}{1, 2, 3},
-				[]interface{}{
-					[]interface{}{1},
-					[]interface{}{2},
-					[]interface{}{3},
+				[]T{1, 2, 3},
+				[]T{
+					[]T{1},
+					[]T{2},
+					[]T{3},
 				},
 				1,
 			},
 			{
-				[]interface{}{1, 2, 3, 4, 5},
-				[]interface{}{
-					[]interface{}{1, 2},
-					[]interface{}{3, 4},
-					[]interface{}{5},
+				[]T{1, 2, 3, 4, 5},
+				[]T{
+					[]T{1, 2},
+					[]T{3, 4},
+					[]T{5},
 				},
 				2,
 			},
 			{
-				[]interface{}{1, 2, 3, 4, 5, 6, 7},
-				[]interface{}{
-					[]interface{}{1, 2, 3},
-					[]interface{}{4, 5, 6},
-					[]interface{}{7},
+				[]T{1, 2, 3, 4, 5, 6, 7},
+				[]T{
+					[]T{1, 2, 3},
+					[]T{4, 5, 6},
+					[]T{7},
 				},
 				3,
 			},
@@ -331,7 +271,7 @@ func Test_stream_chunk_every(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -349,11 +289,11 @@ func Test_stream_chunk_every(t *testing.T) {
 
 	{
 		var (
-			input          = []interface{}{1, 2, 3, 4, 5, 6, 7}
-			expectedOutput = []interface{}{
-				[]interface{}{1, 2, 3},
-				[]interface{}{4, 5, 6},
-				[]interface{}{7},
+			input          = []T{1, 2, 3, 4, 5, 6, 7}
+			expectedOutput = []T{
+				[]T{1, 2, 3},
+				[]T{4, 5, 6},
+				[]T{7},
 			}
 			chunkSize = 3
 		)
@@ -362,7 +302,7 @@ func Test_stream_chunk_every(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -383,8 +323,8 @@ func Test_stream_chunk_every(t *testing.T) {
 func Test_stream_skip(t *testing.T) {
 	type (
 		expectation struct {
-			input          []interface{}
-			expectedOutput []interface{}
+			input          []T
+			expectedOutput []T
 			skipCount      int
 		}
 	)
@@ -397,28 +337,28 @@ func Test_stream_skip(t *testing.T) {
 				100,
 			},
 			{
-				[]interface{}{1, 2, 3},
-				[]interface{}{1, 2, 3},
+				[]T{1, 2, 3},
+				[]T{1, 2, 3},
 				0,
 			},
 			{
-				[]interface{}{1, 2, 3},
-				[]interface{}{2, 3},
+				[]T{1, 2, 3},
+				[]T{2, 3},
 				1,
 			},
 			{
-				[]interface{}{1, 2, 3},
-				[]interface{}{3},
+				[]T{1, 2, 3},
+				[]T{3},
 				2,
 			},
 			{
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				[]interface{}{3, 4, 4},
+				[]T{1, 2, 3, 3, 4, 4},
+				[]T{3, 4, 4},
 				3,
 			},
 			{
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				[]interface{}{4, 4},
+				[]T{1, 2, 3, 3, 4, 4},
+				[]T{4, 4},
 				4,
 			},
 		}
@@ -435,7 +375,7 @@ func Test_stream_skip(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -455,9 +395,9 @@ func Test_stream_skip(t *testing.T) {
 func Test_stream_skip_while(t *testing.T) {
 	type (
 		expectation struct {
-			input          []interface{}
-			expectedOutput []interface{}
-			skipFn         func(interface{}) bool
+			input          []T
+			expectedOutput []T
+			skipFn         func(T) bool
 		}
 	)
 
@@ -466,27 +406,27 @@ func Test_stream_skip_while(t *testing.T) {
 			{
 				nil,
 				nil,
-				func(elem interface{}) bool { return false },
+				func(elem T) bool { return false },
 			},
 			{
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				func(elem interface{}) bool { return false },
+				[]T{1, 2, 3, 3, 4, 4},
+				[]T{1, 2, 3, 3, 4, 4},
+				func(elem T) bool { return false },
 			},
 			{
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				[]interface{}{},
-				func(elem interface{}) bool { return true },
+				[]T{1, 2, 3, 3, 4, 4},
+				[]T{},
+				func(elem T) bool { return true },
 			},
 			{
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				[]interface{}{3, 3, 4, 4},
-				func(elem interface{}) bool { return elem.(int) < 3 },
+				[]T{1, 2, 3, 3, 4, 4},
+				[]T{3, 3, 4, 4},
+				func(elem T) bool { return elem.(int) < 3 },
 			},
 			{
-				[]interface{}{2, 2, 2, 4, 4, 3, 9},
-				[]interface{}{3, 9},
-				func(elem interface{}) bool { return elem.(int)%2 == 0 },
+				[]T{2, 2, 2, 4, 4, 3, 9},
+				[]T{3, 9},
+				func(elem T) bool { return elem.(int)%2 == 0 },
 			},
 		}
 	)
@@ -502,7 +442,7 @@ func Test_stream_skip_while(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -524,9 +464,9 @@ func Test_stream_skip_while(t *testing.T) {
 func Test_stream_filter(t *testing.T) {
 	type (
 		expectation struct {
-			input          []interface{}
-			expectedOutput []interface{}
-			filterFn       func(interface{}) bool
+			input          []T
+			expectedOutput []T
+			filterFn       func(T) bool
 		}
 	)
 
@@ -535,27 +475,27 @@ func Test_stream_filter(t *testing.T) {
 			{
 				nil,
 				nil,
-				func(elem interface{}) bool { return true },
+				func(elem T) bool { return true },
 			},
 			{
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				func(elem interface{}) bool { return true },
+				[]T{1, 2, 3, 3, 4, 4},
+				[]T{1, 2, 3, 3, 4, 4},
+				func(elem T) bool { return true },
 			},
 			{
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				[]interface{}{},
-				func(elem interface{}) bool { return false },
+				[]T{1, 2, 3, 3, 4, 4},
+				[]T{},
+				func(elem T) bool { return false },
 			},
 			{
-				[]interface{}{1, 3, 11, 9, 21, 17},
-				[]interface{}{3, 9, 21},
-				func(elem interface{}) bool { return elem.(int)%3 == 0 },
+				[]T{1, 3, 11, 9, 21, 17},
+				[]T{3, 9, 21},
+				func(elem T) bool { return elem.(int)%3 == 0 },
 			},
 			{
-				[]interface{}{2, 2, 2, 4, 4, 3, 9, 8},
-				[]interface{}{4, 4, 8},
-				func(elem interface{}) bool { return elem.(int)%4 == 0 },
+				[]T{2, 2, 2, 4, 4, 3, 9, 8},
+				[]T{4, 4, 8},
+				func(elem T) bool { return elem.(int)%4 == 0 },
 			},
 		}
 	)
@@ -571,7 +511,7 @@ func Test_stream_filter(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -591,16 +531,16 @@ func Test_stream_filter(t *testing.T) {
 
 	{
 		var (
-			input          = []interface{}{2, 2, 2, 4, 4, 3, 9, 8}
-			expectedOutput = []interface{}{4, 4, 8}
-			filterFn       = func(elem interface{}) bool { return elem.(int)%4 == 0 }
+			input          = []T{2, 2, 2, 4, 4, 3, 9, 8}
+			expectedOutput = []T{4, 4, 8}
+			filterFn       = func(elem T) bool { return elem.(int)%4 == 0 }
 		)
 
 		t.Run("stream filter, Next() returns true as long as Value() is not called", func(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -627,8 +567,8 @@ func Test_stream_filter(t *testing.T) {
 func Test_stream_take(t *testing.T) {
 	type (
 		expectation struct {
-			input          []interface{}
-			expectedOutput []interface{}
+			input          []T
+			expectedOutput []T
 			takeCount      int
 		}
 	)
@@ -636,28 +576,28 @@ func Test_stream_take(t *testing.T) {
 	var (
 		expectations = []expectation{
 			{
-				[]interface{}{1, 2, 3},
-				[]interface{}{1},
+				[]T{1, 2, 3},
+				[]T{1},
 				1,
 			},
 			{
-				[]interface{}{1, 2, 3},
-				[]interface{}{1, 2},
+				[]T{1, 2, 3},
+				[]T{1, 2},
 				2,
 			},
 			{
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				[]interface{}{1, 2, 3},
+				[]T{1, 2, 3, 3, 4, 4},
+				[]T{1, 2, 3},
 				3,
 			},
 			{
-				[]interface{}{},
-				[]interface{}{},
+				[]T{},
+				[]T{},
 				4,
 			},
 			{
-				[]interface{}{1, 2},
-				[]interface{}{1, 2},
+				[]T{1, 2},
+				[]T{1, 2},
 				4,
 			},
 		}
@@ -674,7 +614,7 @@ func Test_stream_take(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -692,8 +632,8 @@ func Test_stream_take(t *testing.T) {
 
 	{
 		var (
-			input          = []interface{}{1, 2, 3}
-			expectedOutput = []interface{}{1}
+			input          = []T{1, 2, 3}
+			expectedOutput = []T{1}
 			takeCount      = 1
 		)
 
@@ -701,7 +641,7 @@ func Test_stream_take(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -728,33 +668,33 @@ func Test_stream_take(t *testing.T) {
 func Test_stream_take_while(t *testing.T) {
 	type (
 		expectation struct {
-			input          []interface{}
-			expectedOutput []interface{}
-			takeFn         func(interface{}) bool
+			input          []T
+			expectedOutput []T
+			takeFn         func(T) bool
 		}
 	)
 
 	var (
 		expectations = []expectation{
 			{
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				func(elem interface{}) bool { return true },
+				[]T{1, 2, 3, 3, 4, 4},
+				[]T{1, 2, 3, 3, 4, 4},
+				func(elem T) bool { return true },
 			},
 			{
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				[]interface{}{},
-				func(elem interface{}) bool { return false },
+				[]T{1, 2, 3, 3, 4, 4},
+				[]T{},
+				func(elem T) bool { return false },
 			},
 			{
-				[]interface{}{1, 2, 3, 3, 4, 4},
-				[]interface{}{1, 2, 3, 3},
-				func(elem interface{}) bool { return elem.(int) < 4 },
+				[]T{1, 2, 3, 3, 4, 4},
+				[]T{1, 2, 3, 3},
+				func(elem T) bool { return elem.(int) < 4 },
 			},
 			{
-				[]interface{}{2, 2, 2, 4, 4, 3, 9},
-				[]interface{}{2, 2, 2, 4, 4},
-				func(elem interface{}) bool { return elem.(int)%2 == 0 },
+				[]T{2, 2, 2, 4, 4, 3, 9},
+				[]T{2, 2, 2, 4, 4},
+				func(elem T) bool { return elem.(int)%2 == 0 },
 			},
 		}
 	)
@@ -770,7 +710,7 @@ func Test_stream_take_while(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -791,16 +731,16 @@ func Test_stream_take_while(t *testing.T) {
 
 	{
 		var (
-			input          = []interface{}{2, 2, 2, 4, 4, 3, 9}
-			expectedOutput = []interface{}{2, 2, 2, 4, 4}
-			takeFn         = func(elem interface{}) bool { return elem.(int)%2 == 0 }
+			input          = []T{2, 2, 2, 4, 4, 3, 9}
+			expectedOutput = []T{2, 2, 2, 4, 4}
+			takeFn         = func(elem T) bool { return elem.(int)%2 == 0 }
 		)
 
 		t.Run("stream take while, Next() returns true as long as Value() is not called", func(t *testing.T) {
 			var (
 				assert = assert.New(t)
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input...)
+				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
 			)
 
@@ -828,8 +768,8 @@ func Test_chain_calls(t *testing.T) {
 	var (
 		assert = assert.New(t)
 
-		input          []interface{}
-		expectedOutput []interface{}
+		input          []T
+		expectedOutput []T
 	)
 
 	for i := 1; i <= 100; i++ {
@@ -847,15 +787,15 @@ func Test_chain_calls(t *testing.T) {
 		expectedOutput = append(expectedOutput, v)
 	}
 
-	iterator := streamer.NewSliceIterator(input...)
+	iterator := streamer.NewSliceIterator(input)
 	stream := streamer.NewStream(iterator)
 
 	stream = stream.
-		Map(func(v interface{}) interface{} { return v.(int) + 100 }).
+		Map(func(v T) T { return v.(int) + 100 }).
 		Take(99).
-		Filter(func(v interface{}) bool { return v.(int)%11 == 0 }).
+		Filter(func(v T) bool { return v.(int)%11 == 0 }).
 		Skip(1).
-		SkipWhile(func(v interface{}) bool { return v.(int) <= 121 })
+		SkipWhile(func(v T) bool { return v.(int) <= 121 })
 
 	index := 0
 	for stream.Next() {

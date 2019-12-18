@@ -1,5 +1,12 @@
 package streamer
 
+type Iterator interface {
+	Next() bool
+	Value() TItem
+}
+
+//
+
 type (
 	TItem      = interface{}
 	TIn        = interface{}
@@ -60,11 +67,4 @@ func (st *Stream) Take(takeCount int) *Stream {
 func (st *Stream) TakeWhile(takeFn func(TItem) bool) *Stream {
 	iterator := newTakeWhileStream(st.input, takeFn)
 	return NewStream(iterator)
-}
-
-//
-
-type Iterator interface {
-	Next() bool
-	Value() TItem
 }

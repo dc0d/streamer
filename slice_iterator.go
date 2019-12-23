@@ -1,12 +1,12 @@
 package streamer
 
 type SliceIterator struct {
-	input       []TItem
+	input       []interface{}
 	current     int
-	currentItem TItem
+	currentItem interface{}
 }
 
-func NewSliceIterator(input []TItem) *SliceIterator {
+func NewSliceIterator(input []interface{}) *SliceIterator {
 	res := &SliceIterator{
 		input:   input,
 		current: -1,
@@ -28,7 +28,7 @@ func (it *SliceIterator) Next() bool {
 	return false
 }
 
-func (it *SliceIterator) Value() TItem {
+func (it *SliceIterator) Value() interface{} {
 	item := it.currentItem
 	it.currentItem = nil
 	return item

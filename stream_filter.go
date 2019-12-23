@@ -2,12 +2,12 @@ package streamer
 
 type filterStream struct {
 	input    Iterator
-	filterFn func(TItem) bool
+	filterFn func(interface{}) bool
 
-	currentItem TItem
+	currentItem interface{}
 }
 
-func newFilterStream(input Iterator, filterFn func(TItem) bool) (res *filterStream) {
+func newFilterStream(input Iterator, filterFn func(interface{}) bool) (res *filterStream) {
 	res = &filterStream{
 		input:    input,
 		filterFn: filterFn,
@@ -29,7 +29,7 @@ func (fs *filterStream) Next() bool {
 	return false
 }
 
-func (fs *filterStream) Value() TItem {
+func (fs *filterStream) Value() interface{} {
 	value := fs.currentItem
 	fs.currentItem = nil
 	return value

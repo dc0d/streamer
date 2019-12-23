@@ -2,13 +2,13 @@ package streamer
 
 type takeWhileStream struct {
 	input  Iterator
-	takeFn func(TItem) bool
+	takeFn func(interface{}) bool
 
-	currentItem TItem
+	currentItem interface{}
 	taken       bool
 }
 
-func newTakeWhileStream(input Iterator, takeFn func(TItem) bool) (res *takeWhileStream) {
+func newTakeWhileStream(input Iterator, takeFn func(interface{}) bool) (res *takeWhileStream) {
 	res = &takeWhileStream{
 		input:  input,
 		takeFn: takeFn,
@@ -36,7 +36,7 @@ func (tw *takeWhileStream) Next() bool {
 	return false
 }
 
-func (tw *takeWhileStream) Value() TItem {
+func (tw *takeWhileStream) Value() interface{} {
 	value := tw.currentItem
 	tw.currentItem = nil
 	return value

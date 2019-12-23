@@ -4,7 +4,7 @@ type chunkEveryStream struct {
 	input     Iterator
 	chunkSize int
 
-	lastChunk []TItem
+	lastChunk []interface{}
 }
 
 func newChunkEveryStream(input Iterator, chunkSize int) (res *chunkEveryStream) {
@@ -29,7 +29,7 @@ func (ce *chunkEveryStream) Next() bool {
 	return len(ce.lastChunk) > 0
 }
 
-func (ce *chunkEveryStream) Value() TItem {
+func (ce *chunkEveryStream) Value() interface{} {
 	item := ce.lastChunk
 	ce.lastChunk = nil
 	return item

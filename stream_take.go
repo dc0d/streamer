@@ -4,7 +4,7 @@ type takeStream struct {
 	input     Iterator
 	takeCount int
 
-	currentItem TItem
+	currentItem interface{}
 }
 
 func newTakeStream(input Iterator, takeCount int) (res *takeStream) {
@@ -31,7 +31,7 @@ func (tc *takeStream) Next() bool {
 	return true
 }
 
-func (tc *takeStream) Value() TItem {
+func (tc *takeStream) Value() interface{} {
 	value := tc.currentItem
 	tc.currentItem = nil
 	return value

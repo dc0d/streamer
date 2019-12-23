@@ -2,14 +2,14 @@ package streamer
 
 type chunkByStream struct {
 	input   Iterator
-	chunkFn func(x TItem) TSeparator
+	chunkFn func(x interface{}) interface{}
 
-	leftoverChunkItem TItem
-	lastChunk         []TItem
-	lastFlag          TItem
+	leftoverChunkItem interface{}
+	lastChunk         []interface{}
+	lastFlag          interface{}
 }
 
-func newChunkByStream(input Iterator, chunkFn func(x TItem) TSeparator) (res *chunkByStream) {
+func newChunkByStream(input Iterator, chunkFn func(x interface{}) interface{}) (res *chunkByStream) {
 	res = &chunkByStream{
 		input:   input,
 		chunkFn: chunkFn,
@@ -23,7 +23,7 @@ func (cs *chunkByStream) Next() bool {
 	}
 
 	var (
-		flag           TItem
+		flag           interface{}
 		flagCalculated bool
 	)
 
@@ -60,7 +60,7 @@ func (cs *chunkByStream) Next() bool {
 	return len(cs.lastChunk) > 0
 }
 
-func (cs *chunkByStream) Value() TItem {
+func (cs *chunkByStream) Value() interface{} {
 	item := cs.lastChunk
 	cs.lastChunk = nil
 	return item

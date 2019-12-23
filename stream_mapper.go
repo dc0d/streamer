@@ -2,12 +2,12 @@ package streamer
 
 type mapperStream struct {
 	input Iterator
-	mapFn func(x TIn) TOut
+	mapFn func(x interface{}) interface{}
 
-	currentItem TItem
+	currentItem interface{}
 }
 
-func newMapperStream(input Iterator, mapFn func(x TIn) TOut) (res *mapperStream) {
+func newMapperStream(input Iterator, mapFn func(x interface{}) interface{}) (res *mapperStream) {
 	res = &mapperStream{
 		input: input,
 		mapFn: mapFn,
@@ -26,7 +26,7 @@ func (ms *mapperStream) Next() bool {
 	return next
 }
 
-func (ms *mapperStream) Value() TItem {
+func (ms *mapperStream) Value() interface{} {
 	item := ms.currentItem
 	ms.currentItem = nil
 	return item

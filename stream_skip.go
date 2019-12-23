@@ -23,4 +23,4 @@ func (sc *skipStream) Next() bool {
 	return sc.input.Next()
 }
 
-func (sc *skipStream) Value() TItem { return sc.input.Value() }
+func (sc *skipStream) Value() interface{} { return sc.input.Value() }

@@ -3,13 +3,13 @@ package streamer
 import "time"
 
 type ChannelIterator struct {
-	input   <-chan TItem
+	input   <-chan interface{}
 	timeout time.Duration
 
-	currentItem TItem
+	currentItem interface{}
 }
 
-func NewChannelIterator(input <-chan TItem, timeout time.Duration) (res *ChannelIterator) {
+func NewChannelIterator(input <-chan interface{}, timeout time.Duration) (res *ChannelIterator) {
 	res = &ChannelIterator{
 		input:   input,
 		timeout: timeout,
@@ -58,7 +58,7 @@ func (ci *ChannelIterator) Next() bool {
 	}
 }
 
-func (ci *ChannelIterator) Value() TItem {
+func (ci *ChannelIterator) Value() interface{} {
 	item := ci.currentItem
 	ci.currentItem = nil
 	return item

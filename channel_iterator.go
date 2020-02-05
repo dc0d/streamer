@@ -5,8 +5,6 @@ import "time"
 type ChannelIterator struct {
 	input   <-chan interface{}
 	timeout time.Duration
-
-	currentItem interface{}
 }
 
 func NewChannelIterator(input <-chan interface{}, timeout time.Duration) (res *ChannelIterator) {
@@ -17,21 +15,16 @@ func NewChannelIterator(input <-chan interface{}, timeout time.Duration) (res *C
 	return
 }
 
-func (ci *ChannelIterator) Next() bool {
-	if ci.currentItem != nil {
-		return true
-	}
-
+func (ci *ChannelIterator) Next() (interface{}, bool) {
 	if ci.timeout > 0 {
 		select {
 		case v, ok := <-ci.input:
 			if !ok {
-				return false
+				return nil, false
 			}
-			ci.currentItem = v
-			return true
+			return v, true
 		case <-time.After(ci.timeout):
-			return false
+			return nil, false
 		}
 	}
 
@@ -39,27 +32,19 @@ func (ci *ChannelIterator) Next() bool {
 		select {
 		case v, ok := <-ci.input:
 			if !ok {
-				return false
+				return nil, false
 			}
-			ci.currentItem = v
-			return true
+			return v, true
 		default:
-			return false
+			return nil, false
 		}
 	}
 
 	select {
 	case v, ok := <-ci.input:
 		if !ok {
-			return false
+			return nil, false
 		}
-		ci.currentItem = v
-		return true
+		return v, true
 	}
-}
-
-func (ci *ChannelIterator) Value() interface{} {
-	item := ci.currentItem
-	ci.currentItem = nil
-	return item
 }

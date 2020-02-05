@@ -3,8 +3,6 @@ package streamer
 type takeStream struct {
 	input     Iterator
 	takeCount int
-
-	currentItem interface{}
 }
 
 func newTakeStream(input Iterator, takeCount int) (res *takeStream) {
@@ -15,24 +13,14 @@ func newTakeStream(input Iterator, takeCount int) (res *takeStream) {
 	return
 }
 
-func (tc *takeStream) Next() bool {
-	if tc.currentItem != nil {
-		return true
-	}
+func (tc *takeStream) Next() (interface{}, bool) {
 	if tc.takeCount == 0 {
-		return false
+		return nil, false
 	}
-	next := tc.input.Next()
-	if !next {
-		return false
+	item, ok := tc.input.Next()
+	if !ok {
+		return item, false
 	}
-	tc.currentItem = tc.input.Value()
 	tc.takeCount--
-	return true
-}
-
-func (tc *takeStream) Value() interface{} {
-	value := tc.currentItem
-	tc.currentItem = nil
-	return value
+	return item, true
 }

@@ -7,3 +7,4 @@ This package provides utilities to be used with Iterator Pattern in Go - a perso
     - examples
 - channel stream
 - examples for composing streams
+- handle `nil` value properly

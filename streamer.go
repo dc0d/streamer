@@ -1,16 +1,11 @@
 package streamer
 
-// Iterator interface needs to be implemented by every iterator type.
-// Next returns true as long as there are any value that is not consumed yet. This behaviour is consistent with the way channels work in Go.
-// Value consumes the next available value. For each call to Next there should be also one call to Value.
 type Iterator interface {
-	Next() bool
-	Value() interface{}
+	Next() (interface{}, bool)
 }
 
 //
 
-// Stream consumes values from an Iterator and makes it possible to apply different actions to that stream.
 type Stream struct {
 	input Iterator
 }
@@ -20,9 +15,7 @@ func NewStream(input Iterator) (res *Stream) {
 	return
 }
 
-func (st *Stream) Next() bool { return st.input.Next() }
-
-func (st *Stream) Value() interface{} { return st.input.Value() }
+func (st *Stream) Next() (interface{}, bool) { return st.input.Next() }
 
 func (st *Stream) Map(mapFn func(x interface{}) interface{}) *Stream {
 	iterator := newMapperStream(st.input, mapFn)

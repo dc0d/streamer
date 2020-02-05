@@ -3,8 +3,6 @@ package streamer
 type mapperStream struct {
 	input Iterator
 	mapFn func(x interface{}) interface{}
-
-	currentItem interface{}
 }
 
 func newMapperStream(input Iterator, mapFn func(x interface{}) interface{}) (res *mapperStream) {
@@ -15,19 +13,10 @@ func newMapperStream(input Iterator, mapFn func(x interface{}) interface{}) (res
 	return
 }
 
-func (ms *mapperStream) Next() bool {
-	if ms.currentItem != nil {
-		return true
+func (ms *mapperStream) Next() (interface{}, bool) {
+	next, ok := ms.input.Next()
+	if !ok {
+		return nil, false
 	}
-	next := ms.input.Next()
-	if next {
-		ms.currentItem = ms.mapFn(ms.input.Value())
-	}
-	return next
-}
-
-func (ms *mapperStream) Value() interface{} {
-	item := ms.currentItem
-	ms.currentItem = nil
-	return item
+	return ms.mapFn(next), true
 }

@@ -1,7 +1,6 @@
-run="(. ./scripts/build.sh) && (. ./scripts/test.sh)"
-
 while true
 do
     watchman-wait -p "**/*.go" -- .
-    eval $run
+    clear
+    go test -cover -count=1 -timeout 10s -race ./...
 done

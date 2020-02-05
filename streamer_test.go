@@ -45,41 +45,15 @@ func Test_stream_map(t *testing.T) {
 
 				iterator streamer.Iterator = streamer.NewSliceIterator(input)
 				stream                     = streamer.NewStream(iterator)
+
+				_ streamer.Iterator = stream
 			)
 
 			stream = stream.Map(mapFn)
 
 			index := 0
-			for stream.Next() {
-				assert.Equal(expectedOutput[index], stream.Value())
-				index++
-			}
-
-			assert.Equal(len(expectedOutput), index)
-		})
-	}
-
-	{
-		var (
-			input          = []T{1, 2, 3}
-			expectedOutput = []T{2, 4, 6}
-			mapFn          = func(x T) T { return x.(int) * 2 }
-		)
-
-		t.Run("stream map does not proceed until last value is read", func(t *testing.T) {
-			var (
-				assert = assert.New(t)
-
-				iterator streamer.Iterator = streamer.NewSliceIterator(input)
-				stream                     = streamer.NewStream(iterator)
-			)
-
-			stream = stream.Map(mapFn)
-
-			index := 0
-			for stream.Next() {
-				stream.Next()
-				assert.Equal(expectedOutput[index], stream.Value())
+			for item, ok := stream.Next(); ok; item, ok = stream.Next() {
+				assert.Equal(expectedOutput[index], item)
 				index++
 			}
 
@@ -169,43 +143,8 @@ func Test_stream_chunk_by(t *testing.T) {
 			stream = stream.ChunkBy(chunkFn)
 
 			index := 0
-			for stream.Next() {
-				assert.Equal(expectedOutput[index], stream.Value())
-				index++
-			}
-
-			assert.Equal(len(expectedOutput), index)
-		})
-	}
-
-	{
-		var (
-			input          = []T{1, 2, 2, 3, 4, 4, 6, 7, 7}
-			expectedOutput = []T{
-				[]T{1},
-				[]T{2, 2},
-				[]T{3},
-				[]T{4, 4},
-				[]T{6},
-				[]T{7, 7},
-			}
-			chunkFn = func(x T) T { return x.(int) % 3 }
-		)
-
-		t.Run("stream chunk by does not proceed until last value is read", func(t *testing.T) {
-			var (
-				assert = assert.New(t)
-
-				iterator streamer.Iterator = streamer.NewSliceIterator(input)
-				stream                     = streamer.NewStream(iterator)
-			)
-
-			stream = stream.ChunkBy(chunkFn)
-
-			index := 0
-			for stream.Next() {
-				stream.Next()
-				assert.Equal(expectedOutput[index], stream.Value())
+			for item, ok := stream.Next(); ok; item, ok = stream.Next() {
+				assert.Equal(expectedOutput[index], item)
 				index++
 			}
 
@@ -278,40 +217,8 @@ func Test_stream_chunk_every(t *testing.T) {
 			stream = stream.ChunkEvery(chunkSize)
 
 			index := 0
-			for stream.Next() {
-				assert.Equal(expectedOutput[index], stream.Value())
-				index++
-			}
-
-			assert.Equal(len(expectedOutput), index)
-		})
-	}
-
-	{
-		var (
-			input          = []T{1, 2, 3, 4, 5, 6, 7}
-			expectedOutput = []T{
-				[]T{1, 2, 3},
-				[]T{4, 5, 6},
-				[]T{7},
-			}
-			chunkSize = 3
-		)
-
-		t.Run("stream chunk every does not proceed until last value is read", func(t *testing.T) {
-			var (
-				assert = assert.New(t)
-
-				iterator streamer.Iterator = streamer.NewSliceIterator(input)
-				stream                     = streamer.NewStream(iterator)
-			)
-
-			stream = stream.ChunkEvery(chunkSize)
-
-			index := 0
-			for stream.Next() {
-				stream.Next()
-				assert.Equal(expectedOutput[index], stream.Value())
+			for item, ok := stream.Next(); ok; item, ok = stream.Next() {
+				assert.Equal(expectedOutput[index], item)
 				index++
 			}
 
@@ -382,8 +289,8 @@ func Test_stream_skip(t *testing.T) {
 			stream = stream.Skip(skipCount)
 
 			index := 0
-			for stream.Next() {
-				assert.Equal(expectedOutput[index], stream.Value())
+			for item, ok := stream.Next(); ok; item, ok = stream.Next() {
+				assert.Equal(expectedOutput[index], item)
 				index++
 			}
 
@@ -449,9 +356,9 @@ func Test_stream_skip_while(t *testing.T) {
 			stream = stream.SkipWhile(skipFn)
 
 			index := 0
-			for stream.Next() {
+			for item, ok := stream.Next(); ok; item, ok = stream.Next() {
 				if len(expectedOutput) > index {
-					assert.Equal(expectedOutput[index], stream.Value())
+					assert.Equal(expectedOutput[index], item)
 					index++
 				}
 			}
@@ -518,47 +425,13 @@ func Test_stream_filter(t *testing.T) {
 			stream = stream.Filter(filterFn)
 
 			index := 0
-			for stream.Next() {
+			for item, ok := stream.Next(); ok; item, ok = stream.Next() {
 				if len(expectedOutput) > index {
-					assert.Equal(expectedOutput[index], stream.Value())
+					assert.Equal(expectedOutput[index], item)
 					index++
 				}
 			}
 
-			assert.Equal(len(expectedOutput), index)
-		})
-	}
-
-	{
-		var (
-			input          = []T{2, 2, 2, 4, 4, 3, 9, 8}
-			expectedOutput = []T{4, 4, 8}
-			filterFn       = func(elem T) bool { return elem.(int)%4 == 0 }
-		)
-
-		t.Run("stream filter, Next() returns true as long as Value() is not called", func(t *testing.T) {
-			var (
-				assert = assert.New(t)
-
-				iterator streamer.Iterator = streamer.NewSliceIterator(input)
-				stream                     = streamer.NewStream(iterator)
-			)
-
-			stream = stream.Filter(filterFn)
-
-			stream.Next()
-
-			assert.True(stream.Next())
-
-			index := 0
-			for stream.Next() {
-				if len(expectedOutput) > index {
-					assert.Equal(expectedOutput[index], stream.Value())
-					index++
-				}
-			}
-
-			assert.False(stream.Next())
 			assert.Equal(len(expectedOutput), index)
 		})
 	}
@@ -621,45 +494,11 @@ func Test_stream_take(t *testing.T) {
 			stream = stream.Take(takeCount)
 
 			index := 0
-			for stream.Next() {
-				assert.Equal(expectedOutput[index], stream.Value())
+			for item, ok := stream.Next(); ok; item, ok = stream.Next() {
+				assert.Equal(expectedOutput[index], item)
 				index++
 			}
 
-			assert.Equal(len(expectedOutput), index)
-		})
-	}
-
-	{
-		var (
-			input          = []T{1, 2, 3}
-			expectedOutput = []T{1}
-			takeCount      = 1
-		)
-
-		t.Run("stream take, Next() returns true as long as Value() is not called", func(t *testing.T) {
-			var (
-				assert = assert.New(t)
-
-				iterator streamer.Iterator = streamer.NewSliceIterator(input)
-				stream                     = streamer.NewStream(iterator)
-			)
-
-			stream = stream.Take(takeCount)
-
-			stream.Next()
-
-			assert.True(stream.Next())
-
-			index := 0
-			for stream.Next() {
-				if len(expectedOutput) > index {
-					assert.Equal(expectedOutput[index], stream.Value())
-					index++
-				}
-			}
-
-			assert.False(stream.Next())
 			assert.Equal(len(expectedOutput), index)
 		})
 	}
@@ -717,48 +556,15 @@ func Test_stream_take_while(t *testing.T) {
 			stream = stream.TakeWhile(takeFn)
 
 			index := 0
-			for stream.Next() {
+			for item, ok := stream.Next(); ok; item, ok = stream.Next() {
 				if len(expectedOutput) > index {
-					assert.Equal(expectedOutput[index], stream.Value())
+					assert.Equal(expectedOutput[index], item)
 					index++
 				}
 			}
 
-			assert.False(stream.Next())
-			assert.Equal(len(expectedOutput), index)
-		})
-	}
-
-	{
-		var (
-			input          = []T{2, 2, 2, 4, 4, 3, 9}
-			expectedOutput = []T{2, 2, 2, 4, 4}
-			takeFn         = func(elem T) bool { return elem.(int)%2 == 0 }
-		)
-
-		t.Run("stream take while, Next() returns true as long as Value() is not called", func(t *testing.T) {
-			var (
-				assert = assert.New(t)
-
-				iterator streamer.Iterator = streamer.NewSliceIterator(input)
-				stream                     = streamer.NewStream(iterator)
-			)
-
-			stream = stream.TakeWhile(takeFn)
-
-			stream.Next()
-
-			assert.True(stream.Next())
-
-			index := 0
-			for stream.Next() {
-				if len(expectedOutput) > index {
-					assert.Equal(expectedOutput[index], stream.Value())
-					index++
-				}
-			}
-
-			assert.False(stream.Next())
+			_, ok := stream.Next()
+			assert.False(ok)
 			assert.Equal(len(expectedOutput), index)
 		})
 	}
@@ -798,8 +604,7 @@ func Test_chain_calls(t *testing.T) {
 		SkipWhile(func(v T) bool { return v.(int) <= 121 })
 
 	index := 0
-	for stream.Next() {
-		item := stream.Value()
+	for item, ok := stream.Next(); ok; item, ok = stream.Next() {
 		if len(expectedOutput) > index {
 			assert.Equal(expectedOutput[index], item)
 			index++

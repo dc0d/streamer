@@ -4,8 +4,7 @@ type skipWhileStream struct {
 	input  Iterator
 	skipFn func(interface{}) bool
 
-	skipped      bool
-	leftoverItem interface{}
+	skipped bool
 }
 
 func newSkipWhileStream(input Iterator, skipFn func(interface{}) bool) (res *skipWhileStream) {
@@ -16,28 +15,24 @@ func newSkipWhileStream(input Iterator, skipFn func(interface{}) bool) (res *ski
 	return
 }
 
-func (sw *skipWhileStream) Next() bool {
+func (sw *skipWhileStream) Next() (interface{}, bool) {
 	if !sw.skipped {
-		for sw.input.Next() {
-			value := sw.input.Value()
-			if !sw.skipFn(value) {
-				sw.leftoverItem = value
-				break
-			}
-		}
-		sw.skipped = true
-	}
-	if sw.leftoverItem != nil {
-		return true
-	}
-	return sw.input.Next()
-}
+		var (
+			item interface{}
+			ok   bool
+		)
 
-func (sw *skipWhileStream) Value() interface{} {
-	if sw.leftoverItem != nil {
-		value := sw.leftoverItem
-		sw.leftoverItem = nil
-		return value
+		item, ok = sw.input.Next()
+		for ok && sw.skipFn(item) {
+			item, ok = sw.input.Next()
+		}
+
+		sw.skipped = true
+
+		if item != nil {
+			return item, true
+		}
 	}
-	return sw.input.Value()
+
+	return sw.input.Next()
 }

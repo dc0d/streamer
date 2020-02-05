@@ -3,8 +3,6 @@ package streamer
 type chunkEveryStream struct {
 	input     Iterator
 	chunkSize int
-
-	lastChunk []interface{}
 }
 
 func newChunkEveryStream(input Iterator, chunkSize int) (res *chunkEveryStream) {
@@ -15,22 +13,21 @@ func newChunkEveryStream(input Iterator, chunkSize int) (res *chunkEveryStream) 
 	return
 }
 
-func (ce *chunkEveryStream) Next() bool {
-	if ce.lastChunk != nil {
-		return true
-	}
+func (ce *chunkEveryStream) Next() (interface{}, bool) {
+	var (
+		chunk []interface{}
+	)
 
-	for ce.input.Next() {
-		ce.lastChunk = append(ce.lastChunk, ce.input.Value())
-		if len(ce.lastChunk) == ce.chunkSize {
+	for item, ok := ce.input.Next(); ok; item, ok = ce.input.Next() {
+		chunk = append(chunk, item)
+		if len(chunk) == ce.chunkSize {
 			break
 		}
 	}
-	return len(ce.lastChunk) > 0
-}
 
-func (ce *chunkEveryStream) Value() interface{} {
-	item := ce.lastChunk
-	ce.lastChunk = nil
-	return item
+	if len(chunk) == 0 {
+		return nil, false
+	}
+
+	return chunk, true
 }

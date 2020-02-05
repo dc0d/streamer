@@ -4,8 +4,7 @@ type takeWhileStream struct {
 	input  Iterator
 	takeFn func(interface{}) bool
 
-	currentItem interface{}
-	taken       bool
+	taken bool
 }
 
 func newTakeWhileStream(input Iterator, takeFn func(interface{}) bool) (res *takeWhileStream) {
@@ -16,28 +15,17 @@ func newTakeWhileStream(input Iterator, takeFn func(interface{}) bool) (res *tak
 	return
 }
 
-func (tw *takeWhileStream) Next() bool {
+func (tw *takeWhileStream) Next() (interface{}, bool) {
 	if tw.taken {
-		return false
+		return nil, false
 	}
-	if tw.currentItem != nil {
-		return true
+	item, ok := tw.input.Next()
+	if !ok {
+		return nil, false
 	}
-	next := tw.input.Next()
-	if !next {
-		return false
-	}
-	item := tw.input.Value()
 	if tw.takeFn(item) {
-		tw.currentItem = item
-		return true
+		return item, true
 	}
 	tw.taken = true
-	return false
-}
-
-func (tw *takeWhileStream) Value() interface{} {
-	value := tw.currentItem
-	tw.currentItem = nil
-	return value
+	return nil, false
 }

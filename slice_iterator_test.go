@@ -1,7 +1,6 @@
 package streamer_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/dc0d/streamer"
@@ -10,65 +9,39 @@ import (
 )
 
 func Test_slice_iterator(t *testing.T) {
-	type (
-		expectation struct {
-			input          []interface{}
-			expectedOutput []interface{}
-		}
-	)
-
-	var (
-		expectations = []expectation{
-			{nil, nil},
-			{[]interface{}{1}, []interface{}{1}},
-			{[]interface{}{1, 2, "3"}, []interface{}{1, 2, "3"}},
-		}
-	)
-
-	for i, exp := range expectations {
+	t.Run("iterates over a slice of objects", func(t *testing.T) {
 		var (
-			input          = exp.input
-			expectedOutput = exp.expectedOutput
-		)
+			assert = assert.New(t)
 
-		t.Run(fmt.Sprintf("slice iterator test case %v", i+1), func(t *testing.T) {
-			var (
-				assert = assert.New(t)
-
-				iterator streamer.Iterator = streamer.NewSliceIterator(input)
-			)
-
-			index := 0
-			for iterator.Next() {
-				assert.Equal(expectedOutput[index], iterator.Value())
-				index++
-			}
-
-			assert.Equal(len(expectedOutput), index)
-		})
-	}
-
-	{
-		var (
 			input          = []interface{}{1, 2, "3"}
-			expectedOutput = []interface{}{1, 2, "3"}
+			expectedResult = []interface{}{1, 2, "3"}
+
+			iterator streamer.Iterator = streamer.NewSliceIterator(input)
 		)
 
-		t.Run("slice iterator does not proceed on Next() until the last value is read by Value()", func(t *testing.T) {
-			var (
-				assert = assert.New(t)
+		index := 0
+		for item, ok := iterator.Next(); ok; item, ok = iterator.Next() {
+			assert.Equal(expectedResult[index], item)
+			index++
+		}
 
-				iterator streamer.Iterator = streamer.NewSliceIterator(input)
-			)
+		assert.Equal(len(expectedResult), index)
+	})
 
-			index := 0
-			for iterator.Next() {
-				iterator.Next()
-				assert.Equal(expectedOutput[index], iterator.Value())
-				index++
-			}
+	t.Run("iterates over a nil slice", func(t *testing.T) {
+		var (
+			assert = assert.New(t)
 
-			assert.Equal(len(expectedOutput), index)
-		})
-	}
+			input = []interface{}(nil)
+
+			iterator streamer.Iterator = streamer.NewSliceIterator(input)
+		)
+
+		index := 0
+		for _, ok := iterator.Next(); ok; _, ok = iterator.Next() {
+			index++
+		}
+
+		assert.Equal(0, index)
+	})
 }

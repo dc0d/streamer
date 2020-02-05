@@ -13,14 +13,13 @@ func newSkipStream(input Iterator, skipCount int) (res *skipStream) {
 	return
 }
 
-func (sc *skipStream) Next() bool {
+func (sc *skipStream) Next() (interface{}, bool) {
 	if sc.skipCount != 0 {
-		for i := 0; i < sc.skipCount && sc.input.Next(); i++ {
-			sc.input.Value()
+		ok := true
+		for i := 0; i < sc.skipCount && ok; i++ {
+			_, ok = sc.input.Next()
 		}
 		sc.skipCount = 0
 	}
 	return sc.input.Next()
 }
-
-func (sc *skipStream) Value() interface{} { return sc.input.Value() }

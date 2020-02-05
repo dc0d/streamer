@@ -1,9 +1,8 @@
 package streamer
 
 type SliceIterator struct {
-	input       []interface{}
-	current     int
-	currentItem interface{}
+	input   []interface{}
+	current int
 }
 
 func NewSliceIterator(input []interface{}) *SliceIterator {
@@ -15,21 +14,10 @@ func NewSliceIterator(input []interface{}) *SliceIterator {
 	return res
 }
 
-func (it *SliceIterator) Next() bool {
-	if it.currentItem != nil {
-		return true
-	}
-
+func (it *SliceIterator) Next() (interface{}, bool) {
 	if it.current+1 < len(it.input) {
 		it.current++
-		it.currentItem = it.input[it.current]
-		return true
+		return it.input[it.current], true
 	}
-	return false
-}
-
-func (it *SliceIterator) Value() interface{} {
-	item := it.currentItem
-	it.currentItem = nil
-	return item
+	return nil, false
 }

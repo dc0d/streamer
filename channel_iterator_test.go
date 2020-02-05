@@ -34,33 +34,12 @@ func Test_channel_iterator_blocking(t *testing.T) {
 		}
 
 		index := 0
-		for iterator.Next() {
-			assert.Equal(expectedOutput[index], iterator.Value())
+		for item, ok := iterator.Next(); ok; item, ok = iterator.Next() {
+			assert.Equal(expectedOutput[index], item)
 			index++
 		}
 
 		assert.Equal(len(expectedOutput), index)
-	})
-
-	t.Run("channel iterator Next() returns true as long as Value() is not called", func(t *testing.T) {
-		var (
-			assert = assert.New(t)
-
-			input <-chan interface{}
-
-			iterator streamer.Iterator
-		)
-
-		{
-			ch := make(chan interface{}, 1)
-			ch <- 1
-
-			input = ch
-			iterator = streamer.NewChannelIterator(input, -1)
-		}
-
-		assert.True(iterator.Next())
-		assert.True(iterator.Next())
 	})
 }
 
@@ -84,8 +63,8 @@ func Test_channel_iterator_timeout(t *testing.T) {
 		}
 
 		index := 0
-		for iterator.Next() {
-			assert.Equal(expectedOutput[index], iterator.Value())
+		for item, ok := iterator.Next(); ok; item, ok = iterator.Next() {
+			assert.Equal(expectedOutput[index], item)
 			index++
 		}
 
@@ -114,8 +93,8 @@ func Test_channel_iterator_timeout(t *testing.T) {
 		}
 
 		index := 0
-		for iterator.Next() {
-			assert.Equal(expectedOutput[index], iterator.Value())
+		for item, ok := iterator.Next(); ok; item, ok = iterator.Next() {
+			assert.Equal(expectedOutput[index], item)
 			index++
 		}
 
@@ -141,7 +120,7 @@ func Test_channel_iterator_nonblocking(t *testing.T) {
 		}
 
 		index := 0
-		for iterator.Next() {
+		for _, ok := iterator.Next(); ok; _, ok = iterator.Next() {
 			index++
 		}
 
@@ -167,8 +146,8 @@ func Test_channel_iterator_nonblocking(t *testing.T) {
 		}
 
 		index := 0
-		for iterator.Next() {
-			assert.Equal(expectedOutput[index], iterator.Value())
+		for item, ok := iterator.Next(); ok; item, ok = iterator.Next() {
+			assert.Equal(expectedOutput[index], item)
 			index++
 		}
 
@@ -195,8 +174,8 @@ func Test_channel_iterator_nonblocking(t *testing.T) {
 		}
 
 		index := 0
-		for iterator.Next() {
-			assert.Equal(expectedOutput[index], iterator.Value())
+		for item, ok := iterator.Next(); ok; item, ok = iterator.Next() {
+			assert.Equal(expectedOutput[index], item)
 			index++
 		}
 

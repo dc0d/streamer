@@ -5,7 +5,6 @@ type chunkByStream struct {
 	chunkFn func(x interface{}) interface{}
 
 	leftoverChunkItem interface{}
-	lastChunk         []interface{}
 	lastFlag          interface{}
 }
 
@@ -17,14 +16,11 @@ func newChunkByStream(input Iterator, chunkFn func(x interface{}) interface{}) (
 	return
 }
 
-func (cs *chunkByStream) Next() bool {
-	if cs.lastChunk != nil {
-		return true
-	}
-
+func (cs *chunkByStream) Next() (interface{}, bool) {
 	var (
 		flag           interface{}
 		flagCalculated bool
+		chunk          []interface{}
 	)
 
 	if cs.lastFlag != nil {
@@ -34,12 +30,12 @@ func (cs *chunkByStream) Next() bool {
 	}
 
 	if cs.leftoverChunkItem != nil {
-		cs.lastChunk = append(cs.lastChunk, cs.leftoverChunkItem)
+		chunk = append(chunk, cs.leftoverChunkItem)
 		cs.leftoverChunkItem = nil
 	}
 
-	for cs.input.Next() {
-		current := cs.input.Value()
+	for item, ok := cs.input.Next(); ok; item, ok = cs.input.Next() {
+		current := item
 		cond := cs.chunkFn(current)
 
 		if !flagCalculated {
@@ -54,14 +50,12 @@ func (cs *chunkByStream) Next() bool {
 		}
 
 		flag = cond
-		cs.lastChunk = append(cs.lastChunk, current)
+		chunk = append(chunk, current)
 	}
 
-	return len(cs.lastChunk) > 0
-}
+	if len(chunk) == 0 {
+		return nil, false
+	}
 
-func (cs *chunkByStream) Value() interface{} {
-	item := cs.lastChunk
-	cs.lastChunk = nil
-	return item
+	return chunk, true
 }
